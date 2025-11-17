@@ -25,15 +25,9 @@ const itemId =req.params.id
 if(!itemId){
     throw new badRequest("couldn't get item data", ErrorCode.BAD_REQUEST);
    }
-
-const parsedItemId = parseInt(String(itemId))
-if(isNaN(parsedItemId)){
-    throw new badRequest("invalid item id", ErrorCode.BAD_REQUEST);
-}
-
 const deleteItem = await prisma.cart.delete({
     where:{
-        id: parsedItemId
+        id: itemId
     }
 })
 res.status(201).json({
@@ -41,29 +35,24 @@ res.status(201).json({
    })
 }
 export const changeQuantity = async (req:Request, res:Response) => {
-    const itemIdParam = req.params.id 
+    const itemId =req.params.id 
     const {quantity} = req.body
 
     
-    if(!itemIdParam || quantity === undefined || quantity === null){
+    if(!itemId || !quantity){
         throw new badRequest("couldn't get item data", ErrorCode.BAD_REQUEST);
        }
 
-       const parsedQuantity = parseInt(String(quantity))
+       const parsedQuantity = parseInt(quantity)
 
        if(isNaN(parsedQuantity) || parsedQuantity<1){
         throw new badRequest("invalid quantity value", ErrorCode.BAD_REQUEST);
 
        } 
 
-       const parsedItemId = parseInt(String(itemIdParam))
-       if(isNaN(parsedItemId)){
-        throw new badRequest("invalid item id", ErrorCode.BAD_REQUEST);
-       }
-
        const changedQuantity = await prisma.cart.update({
         where: {
-            id: parsedItemId
+            id: itemId
         },
         data: {
            quantity: parsedQuantity
