@@ -24,7 +24,22 @@ export const createOrder = async (req:Request, res:Response) => {
          },0);
          const address = await tx.address.findFirst({
             where: {
-                id: req.user.defaultShippingAddressId
+                id: req.user.defaultShippingAddress
+            }
+         })
+         const order = await tx.order.create({
+            data:{
+                userId: req.user.id,
+                netAmount: price,
+                address: address?.formatedAddress || "No address found",
+                // orderProducts: {
+                //     create: cartItems.map((cart) => {
+                //         return {
+                //             productId: cart.productId,
+                //             quantity: cart.quantity,
+                //         }
+                //     })
+                // }
             }
          })
     })

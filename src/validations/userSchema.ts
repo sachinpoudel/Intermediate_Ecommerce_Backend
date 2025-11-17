@@ -13,8 +13,16 @@ export const loginSchema = z.object({
 })
 
 export const addressSchema = z.object({
+    lineOne: z.string().min(5),
+    lineTwo: z.string().optional(),
+    pinCode: z.string().min(4).max(10),
     city: z.string(),
     state: z.string(),
-    country: z.string()
+    country: z.string(),
+})
 
+export const updateUserSchema = z.object({
+    name:z.string().min(3).max(50).optional(),
+    defaultBillingAddress: z.number().optional(),
+    defaultShippingAddress: z.number().optional(),  
 })
