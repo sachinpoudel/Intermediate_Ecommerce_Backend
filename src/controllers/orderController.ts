@@ -1,6 +1,8 @@
 
 import { Request, Response } from 'express';
 import { prisma } from '../index';
+import { notFound } from '../exceptions/notfound';
+import { ErrorCode } from '../exceptions/root';
 
 export const createOrder = async (req:Request, res:Response) => {
 
@@ -42,9 +44,67 @@ export const createOrder = async (req:Request, res:Response) => {
                 // }
             }
          })
+         const orderEvent = await tx.orderEvents.create({
+            data:{
+                orderId: order.id,
+            }
+         })
+         await tx.cart.deleteMany({
+            where:{
+                userId: req.user.id
+            }
+         })
+         return res.status(201).json({ order, orderEvent }) 
     })
 
 }
- export const listOrder = async (req:Request, res:Response) => {}
-export const cancelOrder = async (req:Request, res:Response) => {}
-export const getOrderById = async (req:Request, res:Response) => {}     
+ export const listOrder = async (req:Request, res:Response) => {
+
+const orders = await prisma.order.findMany({
+    where:{
+        userId: req.user.id
+    }
+})
+
+res.json(orders)
+
+ }
+export const cancelOrder = async (req:Request, res:Response) => {
+    try {
+    const order = await prisma.order.update({
+        where: {
+            id: +req.params.id,
+        },
+        data: {
+            status: "CANCELLED"
+        },
+    })
+    await prisma.orderEvents.create({
+        data:{
+            orderId: order.id,
+            status: "CANCELLED"
+        }
+    })
+    res.json(order)
+} catch (error) {
+    throw new notFound("Order not found", ErrorCode.NOT_FOUND)
+}
+}
+export const getOrderById = async (req:Request, res:Response) => {
+
+try {
+    const order = await prisma.order.findFirstOrThrow({
+        where: {
+            id: +req.params.id,
+        },
+        include: {
+            orderProducts: true,
+            // events: true
+        }
+    })
+    res.json(order)
+} catch (error) {
+    throw new notFound("Order not found", ErrorCode.NOT_FOUND)
+}
+
+}     

@@ -96,6 +96,7 @@ model Order {
   netAmount Decimal
   address   String
   products  Json
+  status OrderEventStatus @default(PENDING)
 
   user User @relation(fields: [userId], references: [id])
 
