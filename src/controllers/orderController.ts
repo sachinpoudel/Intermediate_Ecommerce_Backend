@@ -108,3 +108,62 @@ try {
 }
 
 }     
+
+
+
+export const listAllOrders = async (req:Request, res:Response) => {
+    let whereClause = {}
+    const status = req.params.status
+
+    if(status){
+whereClause = {
+    status
+}
+const orders = await prisma.order.findMany({
+    where: whereClause,
+    skip: req.query.skip ? +req.query.skip : 0,
+})
+res.json(orders)
+    }
+}
+
+export const changeStatus = async (req:Request, res:Response) => {
+    try {
+        const order = await prisma.order.update({
+            where: {
+                id: +req.params.index
+            },
+            data: {
+                status : req.body.status
+            }
+        })
+      res.json(order)
+    
+      await prisma.orderEvents.create({
+        data:{
+            orderId: order.id,
+            status: req.body.status
+        }
+    })
+    } catch (error) {
+        throw new notFound("Order not found", ErrorCode.NOT_FOUND)
+    }
+}
+
+export const listUsersOrders = async (req:Request, res:Response) => {
+
+     let whereClause = {}
+    const status = req.params.id
+
+    if(status){
+whereClause = {
+    ...whereClause,
+    status
+}
+const orders = await prisma.order.findMany({
+    where: whereClause,
+    skip: req.query.skip ? +req.query.skip : 0,
+})
+res.json(orders)
+    }
+}

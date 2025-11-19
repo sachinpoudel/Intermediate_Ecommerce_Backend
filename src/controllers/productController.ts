@@ -86,3 +86,5 @@ export const getProductById = async(req : Request, res: Response) => {
         product
     })
 }
+
+export const searchProducts = async (req: Request, res: Response) => {}
