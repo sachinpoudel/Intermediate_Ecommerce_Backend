@@ -16,8 +16,8 @@ export const prisma = new PrismaClient().$extends({
                     city: true,
                     state: true,
                     country: true
-                } as any,
-                compute(address) {
+                },
+                compute:(address) => {
                     return `${address.city}, ${address.state}, ${address.country}`;
                 }
             }

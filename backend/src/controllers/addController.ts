@@ -3,25 +3,19 @@ import { badRequest } from "../exceptions/badRequest";
 import { ErrorCode } from "../exceptions/root";
 import { prisma } from "..";
 import { success } from "zod";
-import { addressSchema } from "../validations/userSchema";
+import { addressSchema, updateUserSchema } from "../validations/userSchema";
+import { Address, User } from "../../generated/prisma";
+import { notFound } from "../exceptions/notfound";
 
 export const addAddress = async(req:Request,res:Response) =>{
-    const address = addressSchema.parse(req.body)
-   
-if(!address){
-    throw new badRequest("couldnt get address data", ErrorCode.BAD_REQUEST)
+     addressSchema.parse(req.body)
+  const address = await prisma.address.create({
+    data:{
+        ...req.body,
+        userId: req.user.id
 }
-const addAddress = await prisma.address.create({
-data:{
-    ...address ,
-    userId: (req as any).user.id
-}
-})
-res.status(201).json({
-    message: "successfully got the address",
-    success: true,
-    addAddress
-})
+  })
+  res.json(address)
 }
 export const deleteAddress = async(req:Request,res:Response) =>{
     const address = req.params.id 
@@ -41,32 +35,55 @@ export const deleteAddress = async(req:Request,res:Response) =>{
     
 }
 export const updateAddress = async(req:Request,res:Response) =>{
-    const address = req.params.id;
-    if(!address){
-        throw new badRequest("couldnt get address data", ErrorCode.BAD_REQUEST)
+   const validatedData = updateUserSchema.partial().parse(req.body)
+   let shippingAddress : Address
+   let billingAddress: Address;
+
+   if(validatedData.defaultShippingAddress){
+    try {
+        shippingAddress = await prisma.address.findFirstOrThrow({
+            where: {
+                id: validatedData.defaultShippingAddress.toString(),
+            }
+        })
+    } catch (error) {
+        throw new notFound("Shipping address not found", ErrorCode.NOT_FOUND)
     }
-    const updatedAddress = await prisma.address.update({
-       where:{
-        id: address.toString()
-       },
-       data:{
-        ...req.body
-       }
-    })
-    res.status(201).json({
-        message: "successfully updated the address",
-        success: true,
-        updatedAddress
-    })
+    if(shippingAddress.userId !== req.user.id){
+        throw new notFound("Shipping address not found", ErrorCode.NOT_FOUND)
+    }
+}
+  if(validatedData.defaultBillingAddress){
+    try {
+        billingAddress = await prisma.address.findFirstOrThrow({
+            where: {
+                id: validatedData.defaultBillingAddress.toString(),
+            }
+        })
+       
+    } catch (error) {
+        throw new notFound("Billing address not found", ErrorCode.NOT_FOUND)
+    }
+     if(billingAddress.userId !== req.user.id){
+            throw new notFound("Billing address not found", ErrorCode.NOT_FOUND)
+        }
+   }
+   const updatedUser = await prisma.user.update({
+    where: {
+        id: req.user.id
+    },data:{
+        ...validatedData,
+    }
+   })
 
 }
 export const listAddress = async(req:Request,res:Response) =>{
    
-
+const userId = req.user.id;
 
     const listAddress = await prisma.address.findMany({
         where:{
-            userId: (req as any).user.id
+            userId: userId
         }
     })
     res.status(201).json({

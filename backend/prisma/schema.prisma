@@ -55,7 +55,6 @@ model Product {
   carts         Cart[]
   orderProducts OrderProduct[]
 }
-
 model Address {
   id        String   @id @default(cuid())
   userId    String
@@ -95,6 +94,8 @@ model Order {
   updatedAt DateTime @default(now())
   netAmount Decimal
   address   String
+  products  Json
+  status OrderEventStatus @default(PENDING)
 
   user User @relation(fields: [userId], references: [id])
 
