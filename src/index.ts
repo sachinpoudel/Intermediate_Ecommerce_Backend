@@ -27,5 +27,5 @@ export const prisma = new PrismaClient().$extends({
 app.use(errorMiddleware)
 
 app.listen(PORT, () => {
-    console.log(`running success on ${PORT}`)
+    console.log("running success")
 })
